@@ -22,6 +22,7 @@
 #include "ipc/ipc_message_macros.h"
 #include "native_mate/converter.h"
 #include "native_mate/dictionary.h"
+#include "third_party/WebKit/public/web/WebDocument.h"
 #include "third_party/WebKit/public/web/WebFrame.h"
 #include "third_party/WebKit/public/web/WebKit.h"
 #include "third_party/WebKit/public/web/WebLocalFrame.h"
@@ -38,6 +39,10 @@ namespace {
 const std::string kIpcKey = "ipcNative";
 const std::string kModuleCacheKey = "native-module-cache";
 
+bool IsDevTools(content::RenderFrame* render_frame) {
+  return render_frame->GetWebFrame()->GetDocument().Url()
+        .ProtocolIs("chrome-devtools");
+}
 
 v8::Local<v8::Object> GetModuleCache(v8::Isolate* isolate) {
   mate::Dictionary global(isolate, isolate->GetCurrentContext()->Global());
@@ -158,8 +163,6 @@ void AtomSandboxedRendererClient::DidCreateScriptContext(
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
   std::string preload_script = command_line->GetSwitchValueASCII(
       switches::kPreloadScript);
-  if (preload_script.empty())
-    return;
 
   auto isolate = context->GetIsolate();
   v8::HandleScope handle_scope(isolate);
