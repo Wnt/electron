@@ -11,6 +11,8 @@ const {closeWindow} = require('./window-helpers')
 const {ipcRenderer, remote, screen} = require('electron')
 const {app, ipcMain, BrowserWindow, BrowserView, protocol, session, webContents} = remote
 
+const features = process.atomBinding('features')
+
 const isCI = remote.getGlobal('isCi')
 const nativeModulesEnabled = remote.getGlobal('nativeModulesEnabled')
 
@@ -3033,17 +3035,11 @@ describe('BrowserWindow module', () => {
   })
 
   describe('offscreen rendering', () => {
-    const isOffscreenRenderingDisabled = () => {
-      const contents = webContents.create({})
-      const disabled = typeof contents.isOffscreen !== 'function'
-      contents.destroy()
-      return disabled
-    }
+    beforeEach(function () {
+      if (!features.isOffscreenRenderingEnabled()) {
+        return this.skip()
+      }
 
-    // Offscreen rendering can be disabled in the build
-    if (isOffscreenRenderingDisabled()) return
-
-    beforeEach(() => {
       if (w != null) w.destroy()
       w = new BrowserWindow({
         width: 100,
